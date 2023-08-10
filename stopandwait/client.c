@@ -1,79 +1,53 @@
-#include<stdio.h>
-#include<sys/socket.h>
-#include<netinet/in.h>
-#include<string.h>
-#include<arpa/inet.h>
-#include<unistd.h>
-#include<stdlib.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-void main(){
-  int client,y,x,k=5,m=1,p;
-  char buffer[1024];
-  struct sockaddr_in servAddr;
-  socklen_t addrSize; //type definition for length and size values used by socket related parameters
- client=socket(PF_INET,SOCK_STREAM,0) ;
-  servAddr.sin_family=AF_INET; //address family
-  servAddr.sin_port=htons(5600); //port in network byte order
-servAddr.sin_addr.s_addr=inet_addr("127.0.0.1");//internet address
- memset(servAddr.sin_zero,'\0',sizeof servAddr.sin_zero); //clear the contigious memory blocks
-y=connect(client,(struct sockaddr*)&servAddr,sizeof servAddr)  ; //connecting
+typedef struct frame {
+    int frame_kind; // ack=0, seq=1, fin=2
+    int seq_no;
+    int ack_no;
+    char data[100];
+} Frame;
 
-  if(y==-1)
-  {
-    printf("Error in connection\n");
-    exit(1);
-  }
-while(k!=0)
-  {
-    if(m<=5)
-    {
-      printf("Sending %d\n",m);
-      
+int main() {
+    int k, sock_dec;
+    char buf[100];
+    struct sockaddr_in server;
+
+    sock_dec = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if (sock_dec == -1) {
+        printf("Error in socket creation\n");
+        return 1;
     }
-  if(m%2==0)  //successful transmission for even packets
-  {
-    strcpy(buffer,"frame");
-  }
-    else{
-      strcpy(buffer,"error"); //error for odd packets
-      printf("Packet loss\n");
-      for(p=1;p<=3;p++)
-        {
-          printf("Waiting for %d seconds\n",p); //delay of 3 sec for retransmisson
+
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons(3003);
+
+    Frame f_send;
+    int frame_id = 0;
+    int len = sizeof(server);
+
+    while (1) {
+        printf("Enter the data: ");
+        fgets(buf, sizeof(buf), stdin);
+        buf[strcspn(buf, "\n")] = '\0';
+        strcpy(f_send.data, buf);
+        f_send.frame_kind = 1;
+        f_send.seq_no = frame_id;
+        f_send.ack_no = 1;
+        k = sendto(sock_dec, &f_send, sizeof(Frame), 0, (struct sockaddr*)&server, sizeof(server));
+        printf("Frame Sent\n");
+
+        Frame f_recv;
+        k = recvfrom(sock_dec, &f_recv, sizeof(Frame), 0, (struct sockaddr*)&server, &len);
+        if (k > 0 ){
+            printf("Ack received\n");
         }
-      printf("Retransmitting...\n");
-      strcpy(buffer,"frame");
-      sleep(3);
     }
-    int x= send(client,buffer,19,0);
-  if(x==-1)  
-  {
-    printf("Errror in sending\n");
-    exit(1);
-  }
-    else{
-      printf("sent %d\n",m);
-    }
-  }
-   int z=recv(client,buffer,1024,0) ; //recv function
-  if(z==-1)
-  {
-    printf("Error in receiving data\n");
-    exit(1);
-  }
-  k--;
-  m++;
-  if((strncmp(buffer,"ack",3)==0))
-  {
-    printf("Acknowledgement receivend for %d \n",m-1);
-  }
-  
-  else{
-    printf("ack not received\n");
-  }
-  close(client);
-  
-  
-  
-  
+
+    return 0;
 }

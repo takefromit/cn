@@ -1,80 +1,52 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
+#include<stdio.h>
 
-struct Link {
-  int hop, dest, wt;
-};
-
-struct Network {
-  int H, L;
-  struct Link* link;
-};
+struct router {
+    int cost[20];
+    int from[20];
+} routingTable[10];
 
 int main() {
-  int H, L, S, i, j;
-  
-  printf("Distance Vector routing using Bellman-Ford Algorithm\n");
-  
-  printf("Enter number of hops: ");
-  scanf("%d", &H);
-  
-  printf("Enter number of links: ");
-  scanf("%d", &L);
-  
-  struct Network* n = (struct Network*)malloc(sizeof(struct Network));
-  n->H = H;
-  // n->L = L;
-  n->link = (struct Link*)malloc(n->L * sizeof(struct Link));
+    int costmat[20][20];
+    int routes;
 
-  for (i = 0; i < L; i++) {
-    printf("\nLink %d: enter source, destination, and weight: ", i + 1);
-    scanf("%d", &n->link[i].hop);
-    scanf("%d", &n->link[i].dest);
-    scanf("%d", &n->link[i].wt);
-  }
-  
-  printf("Enter source node: ");
-  scanf("%d", &S);
-  
-  int dist[H];
-  for (i = 0; i < H; i++) {
-    dist[i] = INT_MAX;
-  }
-  dist[S] = 0;
+    printf("Enter the number of routers: ");
+    scanf("%d", &routes);
 
-  for (i = 1; i < H; i++) {
-    for (j = 0; j < L; j++) {
-      int u = n->link[j].hop;  // Corrected: Assigning the correct values to u and v
-      int v = n->link[j].dest;
-      int wt = n->link[j].wt;
-      
-      if (dist[u] + wt < dist[v]) {
-        dist[v] = dist[u] + wt;
-      }
+    printf("Enter the cost matrix:\n");
+    for (int i = 0; i < routes; i++) {
+        costmat[i][i] = 0;
+        for (int j = 0; j < routes; j++) {
+            scanf("%d", &costmat[i][j]);
+            routingTable[i].cost[j] = costmat[i][j];
+            routingTable[i].from[j] = j;
+        }
     }
-  }
-  
-  // Check for negative weight cycle
-  for (i = 0; i < L; i++) {
-    int u = n->link[i].hop;
-    int v = n->link[i].dest;
-    int wt = n->link[i].wt;
-    
-    if (dist[u] + wt < dist[v]) {
-      printf("Network contains a negative weight cycle\n");
-      return 0;
+
+    int shortPathFlag;
+
+    do {
+        shortPathFlag = 0;
+
+        for (int i = 0; i < routes; i++) {
+            for (int j = 0; j < routes; j++) {
+                for (int k = 0; k < routes; k++) {
+                    if (routingTable[i].cost[j] > costmat[i][k] + routingTable[k].cost[j]) {
+                        routingTable[i].cost[j] = costmat[i][k] + routingTable[k].cost[j];
+                        routingTable[i].from[j] = k;
+                        shortPathFlag = 1;
+                    }
+                }
+            }
+        }
+    } while (shortPathFlag != 0);
+
+    for (int i = 0; i < routes; i++) {
+        printf("For router %d:\n", i + 1);
+        for (int j = 0; j < routes; j++) {
+            printf("Cost of %d from %d is %d\n", j + 1, routingTable[i].from[j] + 1, routingTable[i].cost[j]);
+        }
+        printf("\n");
     }
-  }
-  
-  printf("\nHop\tDistance from source\n");
-  for (i = 0; i < H; i++) {
-    printf("%d\t%d\n", i, dist[i]);
-  }
-  
-  return 0;
+
+    return 0;
 }
-
-
-
-

@@ -1,9 +1,6 @@
 #include <stdio.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -13,52 +10,67 @@
 
 int main(int argc, char *argv[])
 {
-     int sockfd, newsockfd, clength;
-     struct sockaddr_in serv_addr, cli_addr;
-     char str[MAX];
+     int sock_dec, temp_sock_dec,k;
+     struct sockaddr_in server, client;
+     char buf[MAX],name[MAX];
 
-     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-     serv_addr.sin_family = AF_INET;
-     serv_addr.sin_addr.s_addr = INADDR_ANY;
-     serv_addr.sin_port = htons(SERV_TCP_PORT);
+     sock_dec= socket(AF_INET, SOCK_STREAM, 0);
+     server.sin_family = AF_INET;
+     server.sin_addr.s_addr = INADDR_ANY;
+     server.sin_port = 3003;
+     client.sin_family = AF_INET;
+     client.sin_addr.s_addr = INADDR_ANY;
+     client.sin_port = 3003;
 
-     printf("\nBinded");
-     bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+     // printf("\nBinded");
+     k=bind(sock_dec, (struct sockaddr *)&server, sizeof(server));
+     if(k==-1)
+     {
+          printf("Error: Failed to bind");
+     }
      printf("\nListening...");
-     listen(sockfd, 5);
+     k=listen(sock_dec, 5);
+     if(k==-1)
+     {
+          printf("Error: Failed to listening");
+     }
+     int len = sizeof(client);
+     temp_sock_dec = accept(sock_dec, (struct sockaddr *)&client, &len);
+     close(sock_dec);
+      if(temp_sock_dec == -1)
+      {
+          printf("Error: Failed to accept");
+      }
+     k=recv(temp_sock_dec,name,MAX,0);
+     if(k==-1)
+     {
+          printf("Error: Failed to receive");
+     }
+     name[k]='\0';
 
-     clength = sizeof(cli_addr);
-     newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clength);
-     close(sockfd);
+     printf("\nClient message\nFile Name: %s\n", name);
 
-     read(newsockfd, str, MAX);
-     str[MAX - 1] = '\0'; // Ensure string termination
-
-     printf("\nClient message\nFile Name: %s\n", str);
-
-     FILE *f1 = fopen(str, "r");
+     FILE *f1 = fopen(name, "r");
      if (f1 == NULL)
      {
-          perror("File not found");
-          exit(EXIT_FAILURE);
+         k=send(temp_sock_dec,"error",5,0);
+         close(temp_sock_dec);
      }
-
-     char buff[4096];
-     size_t n;
-     while ((n = fread(buff, sizeof(char), sizeof(buff), f1)) > 0)
-     {
-          if (write(newsockfd, buff, n) == -1)
+     else{
+        while(fgets(buf,MAX,f1))
+        {
+          k=send(temp_sock_dec,buf,MAX,0);
+          if(k==-1)
           {
-               perror("write");
-               exit(EXIT_FAILURE);
+               printf("Error in sending");
           }
+        }
      }
-
+     send(temp_sock_dec,"completed",10,0);
      fclose(f1);
      printf("\nFile Transferred\n");
-
      return 0;
 }
 
-gcc server.c -o server
+//gcc server.c -o server
 // ./server 8000

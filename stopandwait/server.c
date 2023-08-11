@@ -23,7 +23,7 @@ int main() {
 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons(3003);
+    server.sin_port =3003;
 
     if (bind(sock_dec, (struct sockaddr*)&server, sizeof(server)) == -1) {
         printf("Error in binding\n");
@@ -36,14 +36,14 @@ int main() {
     int len = sizeof(server);
 
     while (1) {
-        k = recvfrom(sock_dec, &f_recv, sizeof(f_recv), 0, (struct sockaddr*)&server, &len);
+        k = recvfrom(sock_dec, &f_recv, sizeof(Frame), 0, (struct sockaddr*)&server, &len);
         if (k > 0 && f_recv.frame_kind == 1 && f_recv.sq_no == frame_id) {
             printf("Frame received data: %s\n", f_recv.data);
-            memset(&f_send, 0, sizeof(f_send));
+            // memset(&f_send, 0, sizeof(f_send));
             f_send.sq_no = frame_id;
             f_send.frame_kind = 0;
             f_send.ack_no = frame_id == 0 ? 1 : 0;
-            k = sendto(sock_dec, &f_send, sizeof(f_send), 0, (struct sockaddr*)&server, len);
+            k = sendto(sock_dec, &f_send, sizeof(Frame), 0, (struct sockaddr*)&server, len);
             printf("Ack sent\n");
         }
     }

@@ -57,9 +57,9 @@ int len=sizeof(client);
     }
 
     if (flag) {
-        k = send(temp_sock_dec, "No", 3, 0);
+        k = send(temp_sock_dec, "No", 2, 0);
     } else {
-        k = send(temp_sock_dec, "Yes", 2, 0);
+        k = send(temp_sock_dec, "Yes", 3, 0);
     }
 
     if (k == -1) {

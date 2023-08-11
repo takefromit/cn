@@ -20,7 +20,7 @@ if(in<=(bsize-bucket))
 }
 else
 {
-  printf("Drooped packets:%d\n",in-(bsize-bucket));
+  //printf("Drooped packets:%d\n",in-(bsize-bucket));
   //bucket=bsize;
 printf("Bucket status:%d out of %d\n",bucket,bsize);
 }

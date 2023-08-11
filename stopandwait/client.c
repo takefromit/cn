@@ -25,7 +25,7 @@ int main() {
 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons(3003);
+    server.sin_port =3003;
 
     Frame f_send;
     int frame_id = 0;
@@ -34,7 +34,7 @@ int main() {
     while (1) {
         printf("Enter the data: ");
         fgets(buf, sizeof(buf), stdin);
-        buf[strcspn(buf, "\n")] = '\0';
+        // buf[strcspn(buf, "\n")] = '\0';
         strcpy(f_send.data, buf);
         f_send.frame_kind = 1;
         f_send.seq_no = frame_id;

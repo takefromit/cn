@@ -1,35 +1,38 @@
 #include <stdio.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <arpa/inet.h>
+
 
 #define SERV_TCP_PORT 5035
 #define MAX 60
-int main(int arg, char *argv[])
+int main()
 {
-   int sockfd, n;
-   struct sockaddr_in serv_addr;
-   struct hostent *server;
+   int sock_dec,k;
+   struct sockaddr_in server;
+   // struct hostent *server;
    char send[MAX], recvline[MAX], s[MAX], name[MAX];
-   sockfd = socket(AF_INET, SOCK_STREAM, 0);
-   serv_addr.sin_family = AF_INET;
-   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-   serv_addr.sin_port = htons(SERV_TCP_PORT);
-   connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+   sock_dec = socket(AF_INET, SOCK_STREAM, 0);
+   server.sin_family = AF_INET;
+   server.sin_addr.s_addr = INADDR_ANY;
+   server.sin_port = 3003;
+   k=connect(sock_dec, (struct sockaddr *)&server, sizeof(server));
+   if(k==-1)
+   {
+      printf("Error in connection creation");
+   }
+
    printf("\nEnter the source file name : \n");
    // scanf("%s", send);
-   scanf("%59s", send);
-   write(sockfd, send, MAX);
-   while ((n = read(sockfd, recvline, MAX)) != 0)
+   scanf("%s", name);
+   write(sock_dec, name, MAX);
+   while ((k = read(sock_dec, recvline, MAX)) != 0)
    {
       printf("%s", recvline);
    }
-   close(sockfd);
+   close(sock_dec);
    return 0;
 }
 
